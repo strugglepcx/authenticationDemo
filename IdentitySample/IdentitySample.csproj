@@ -5,6 +5,11 @@
     <UserSecretsId>aspnet-IdentitySample-872282CE-B5B8-40E1-A494-04A5F12A9C9A</UserSecretsId>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Compile Remove="Data\Migrations\20180329091529_addNewColumne.cs" />
+    <Compile Remove="Data\Migrations\20180329091529_addNewColumne.Designer.cs" />
+  </ItemGroup>
+
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.All" Version="2.0.6" />

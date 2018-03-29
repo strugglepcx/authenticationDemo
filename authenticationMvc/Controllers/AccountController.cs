@@ -16,6 +16,16 @@ namespace authenticationMvc.Controllers
     {
         public IActionResult Login()
         {
+            return View();
+        }
+
+        public IActionResult Register()
+        {
+            return View();
+        }
+
+        public IActionResult MakeLogin()
+        {
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, "lucy"),
