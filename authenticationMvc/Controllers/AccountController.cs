@@ -29,6 +29,20 @@ namespace authenticationMvc.Controllers
             return View();
         }
 
+        [HttpPost]
+        public async Task<IActionResult> Login(RegisterViewModel loginViewModel)
+        {
+            var user = await _userManager.FindByEmailAsync(loginViewModel.Email);
+
+            if (user == null)
+            {
+
+            }
+
+            await _signInManager.SignInAsync(user, new AuthenticationProperties { IsPersistent = true });
+            return RedirectToAction("Index", "Home");
+        }
+
         public IActionResult Register()
         {
             return View();
@@ -48,6 +62,7 @@ namespace authenticationMvc.Controllers
 
             if (identityResult.Succeeded)
             {
+                await _signInManager.SignInAsync(identityUser, new AuthenticationProperties { IsPersistent = true });
                 return RedirectToAction("Index", "Home");
             }
 
@@ -70,11 +85,11 @@ namespace authenticationMvc.Controllers
             return Ok();
         }
 
-        public IActionResult Logout()
+        public async Task<IActionResult> Logout()
         {
-            HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            await _signInManager.SignOutAsync();
 
-            return Ok();
+            return RedirectToAction("Index", "Home");
         }
     }
 }
