@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using IdentityServer4.Models;
+using IdentityServer4.Test;
 
 namespace IdentityServerCenter
 {
@@ -26,6 +27,26 @@ namespace IdentityServerCenter
                     AllowedGrantTypes = GrantTypes.ClientCredentials,
                     ClientSecrets = {new Secret("secret".Sha256())},
                     AllowedScopes = {"api"}
+                },
+                new Client
+                {
+                    ClientId = "pwdClient",
+                    AllowedGrantTypes = GrantTypes.ResourceOwnerPassword,
+                    ClientSecrets = {new Secret("secret".Sha256())},
+                    AllowedScopes = {"api"}
+                }
+            };
+        }
+
+        public static IEnumerable<TestUser> GetTestUsers()
+        {
+            return new List<TestUser>
+            {
+                new TestUser
+                {
+                    SubjectId = "1",
+                    Username = "strugglepcx",
+                    Password = "123456"
                 }
             };
         }

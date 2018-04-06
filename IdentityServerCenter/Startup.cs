@@ -28,7 +28,8 @@ namespace IdentityServerCenter
             services.AddIdentityServer()
                 .AddDeveloperSigningCredential()
                 .AddInMemoryApiResources(Config.GetResources())
-                .AddInMemoryClients(Config.GetClients());
+                .AddInMemoryClients(Config.GetClients())
+                .AddTestUsers(Config.GetTestUsers().ToList());
             services.AddMvc();
         }
 
