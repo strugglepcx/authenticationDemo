@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using IdentityServer4;
 
 namespace authenticationMvc
 {
@@ -27,21 +28,28 @@ namespace authenticationMvc
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+            services.AddIdentityServer()
+                .AddDeveloperSigningCredential()
+                .AddInMemoryApiResources(Config.GetResources())
+                .AddInMemoryClients(Config.GetClients())
+                .AddTestUsers(Config.GetTestUsers().ToList())
+                .AddInMemoryIdentityResources(Config.GetIdentityResources());
 
-            services.AddIdentity<ApplicationUser, ApplicationUserRole>()
-                .AddEntityFrameworkStores<ApplicationDbContext>()
-                .AddDefaultTokenProviders();
+            //services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
 
-            services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-                .AddCookie(options => options.LoginPath = "/Account/Login");
+            //services.AddIdentity<ApplicationUser, ApplicationUserRole>()
+            //    .AddEntityFrameworkStores<ApplicationDbContext>()
+            //    .AddDefaultTokenProviders();
 
-            services.Configure<IdentityOptions>(options =>
-            {
-                options.Password.RequireLowercase = false;
-                options.Password.RequireNonAlphanumeric = false;
-                options.Password.RequireUppercase = false;
-            });
+            //services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+            //    .AddCookie(options => options.LoginPath = "/Account/Login");
+
+            //services.Configure<IdentityOptions>(options =>
+            //{
+            //    options.Password.RequireLowercase = false;
+            //    options.Password.RequireNonAlphanumeric = false;
+            //    options.Password.RequireUppercase = false;
+            //});
 
             services.AddMvc();
         }
@@ -60,7 +68,8 @@ namespace authenticationMvc
 
             app.UseStaticFiles();
 
-            app.UseAuthentication();
+            app.UseIdentityServer();
+            //app.UseAuthentication();
 
             app.UseMvc(routes =>
             {

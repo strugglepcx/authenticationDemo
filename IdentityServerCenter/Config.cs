@@ -33,6 +33,7 @@ namespace IdentityServerCenter
                     ClientId = "pwdClient",
                     AllowedGrantTypes = GrantTypes.ResourceOwnerPassword,
                     ClientSecrets = {new Secret("secret".Sha256())},
+                    RequireClientSecret = false,
                     AllowedScopes = {"api"}
                 }
             };
