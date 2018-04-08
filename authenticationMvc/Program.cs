@@ -16,10 +16,10 @@ namespace authenticationMvc
         public static void Main(string[] args)
         {
             BuildWebHost(args)
-                //.MigrationDbContext<ApplicationDbContext>((context, services) =>
-                //{
-                //    new ApplicationDbContextSeed().SeedAsync(context, services).Wait();
-                //})
+                .MigrationDbContext<ApplicationDbContext>((context, services) =>
+                {
+                    new ApplicationDbContextSeed().SeedAsync(context, services).Wait();
+                })
                 .Run();
         }
 

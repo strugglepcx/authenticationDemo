@@ -30,6 +30,7 @@ namespace authenticationMvc
                     RequireConsent = false,
                     RedirectUris = {"http://localhost:5001/signin-oidc"},
                     PostLogoutRedirectUris = {"http://localhost:5001/signout-callback-oidc"},
+                    AlwaysIncludeUserClaimsInIdToken = true,
                     AllowedScopes =
                     {
                         IdentityServerConstants.StandardScopes.Profile,

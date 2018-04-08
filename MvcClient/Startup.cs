@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 
 namespace MvcClient
 {
@@ -35,6 +36,7 @@ namespace MvcClient
                     options.SignInScheme = "Cookies";
                     options.Authority = "http://localhost:5000";
                     options.RequireHttpsMetadata = false;
+                    //options.ResponseType = OpenIdConnectResponseType.CodeIdToken;
 
                     options.ClientId = "mvc";
                     options.ClientSecret = "secret";

@@ -12,26 +12,23 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Abstractions;
+using IdentityServer4.Services;
 
 namespace authenticationMvc.Controllers
 {
     public class AccountController : Controller
     {
-        //private readonly UserManager<ApplicationUser> _userManager;
-        //private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly IIdentityServerInteractionService _identityServerInteractionService;
 
-        private readonly TestUserStore _testUserStore;
-
-        public AccountController(TestUserStore testUserStore)
+        public AccountController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager,
+            IIdentityServerInteractionService identityServerInteractionService)
         {
-            _testUserStore = testUserStore;
+            _userManager = userManager;
+            _signInManager = signInManager;
+            _identityServerInteractionService = identityServerInteractionService;
         }
-
-        //public AccountController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager)
-        //{
-        //    _userManager = userManager;
-        //    _signInManager = signInManager;
-        //}
 
         private IActionResult RedirectToLocal(string returnUrl)
         {
@@ -65,28 +62,38 @@ namespace authenticationMvc.Controllers
             //}
 
             //await _signInManager.SignInAsync(user, new AuthenticationProperties { IsPersistent = true });
-            var user = _testUserStore.FindByUsername(loginViewModel.UserName);
+            var user = await _userManager.FindByEmailAsync(loginViewModel.Email);
 
             if (user == null)
             {
-                ModelState.AddModelError(nameof(loginViewModel.UserName), "UserName not exists");
+                ModelState.AddModelError(nameof(loginViewModel.Email), "Email not exists");
             }
             else
             {
-                if (_testUserStore.ValidateCredentials(loginViewModel.UserName, loginViewModel.Password))
+                if (await _userManager.CheckPasswordAsync(user, loginViewModel.Password))
                 {
-                    var props = new AuthenticationProperties
+                    AuthenticationProperties props = null;
+                    if (loginViewModel.RememberMe)
                     {
-                        IsPersistent = true,
-                        ExpiresUtc = DateTimeOffset.UtcNow.Add(TimeSpan.FromMinutes(30))
-                    };
-                    await Microsoft.AspNetCore.Http.AuthenticationManagerExtensions.SignInAsync(HttpContext,
-                        user.SubjectId, user.Username, props);
-                    return RedirectToLocal(returnUrl);
+                        props = new AuthenticationProperties
+                        {
+                            IsPersistent = true,
+                            ExpiresUtc = DateTimeOffset.UtcNow.Add(TimeSpan.FromMinutes(30))
+                        };
+                    }
+
+                    await _signInManager.SignInAsync(user, props);
+
+                    if (_identityServerInteractionService.IsValidReturnUrl(returnUrl))
+                    {
+                        return Redirect(returnUrl);
+                    }
+
+                    return Redirect("~/");
                 }
                 ModelState.AddModelError(nameof(loginViewModel.Password), "Wrong Password");
             }
-            return View();
+            return View(loginViewModel);
         }
 
         public IActionResult Register(string returnUrl = null)
@@ -98,56 +105,55 @@ namespace authenticationMvc.Controllers
         [HttpPost]
         public async Task<IActionResult> Register(RegisterViewModel registerViewModel, string returnUrl = null)
         {
-            //if (!ModelState.IsValid)
-            //{
-            //    return View();
-            //}
-            //ViewData["ReturnUrl"] = returnUrl;
-            //var identityUser = new ApplicationUser
-            //{
-            //    Email = registerViewModel.Email,
-            //    UserName = registerViewModel.Email,
-            //    NormalizedUserName = registerViewModel.Email
-            //};
+            if (!ModelState.IsValid)
+            {
+                return View();
+            }
+            ViewData["ReturnUrl"] = returnUrl;
+            var identityUser = new ApplicationUser
+            {
+                Email = registerViewModel.Email,
+                UserName = registerViewModel.Email,
+                NormalizedUserName = registerViewModel.Email
+            };
 
-            //var identityResult = await _userManager.CreateAsync(identityUser, registerViewModel.Password);
+            var identityResult = await _userManager.CreateAsync(identityUser, registerViewModel.Password);
 
-            //if (identityResult.Succeeded)
-            //{
-            //    await _signInManager.SignInAsync(identityUser, new AuthenticationProperties { IsPersistent = true });
-            //    return RedirectToLocal(returnUrl);
-            //}
-            //else
-            //{
-            //    foreach (var error in identityResult.Errors)
-            //    {
-            //        ModelState.AddModelError(string.Empty, error.Description);
-            //    }
-            //}
+            if (identityResult.Succeeded)
+            {
+                await _signInManager.SignInAsync(identityUser, new AuthenticationProperties { IsPersistent = true });
+                return RedirectToLocal(returnUrl);
+            }
+            else
+            {
+                foreach (var error in identityResult.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+            }
 
             return View();
         }
 
-        public IActionResult MakeLogin()
-        {
-            var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.Name, "lucy"),
-                new Claim(ClaimTypes.Role, "admin")
-            };
+        //public IActionResult MakeLogin()
+        //{
+        //    var claims = new List<Claim>
+        //    {
+        //        new Claim(ClaimTypes.Name, "lucy"),
+        //        new Claim(ClaimTypes.Role, "admin")
+        //    };
 
-            var claimIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+        //    var claimIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
 
 
-            HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme,
-                new ClaimsPrincipal(claimIdentity));
-            return Ok();
-        }
+        //    HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme,
+        //        new ClaimsPrincipal(claimIdentity));
+        //    return Ok();
+        //}
 
         public async Task<IActionResult> Logout()
         {
-            //await _signInManager.SignOutAsync();
-            await HttpContext.SignOutAsync();
+            await _signInManager.SignOutAsync();
             return RedirectToAction("Index", "Home");
         }
     }
